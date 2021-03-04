@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that sends an email when files appear in S3
+Parameters:
+  SesIdentityArn:
+    Type: String
+  TemplateName:
+    Type: String
+    Default: S3_New_File_Lambda_Template
+  MailFrom:
+    Type: String
+  MailTo:
+    Type: String
+Resources:
+  Template:
+    Type: 'AWS::SES::Template'
+    Properties:
+      Template:
+        TemplateName: !Ref TemplateName
+        SubjectPart: "{{Subject}}"
+        TextPart: |+
+          New files:
+          {{#each Files}}
+          {{Url}}
+          {{/each}}
+        HtmlPart: |+
+          <html><body><h1>New files:</h1>
+          <ul>
+          {{#each Files}}
+          <li><a href="{{Url}}">{{FileName}}</a></li>
+          {{/each}}
+          </ul>
+          </body>
+          </html>
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Join [ "", [ "/aws/lambda/", !Ref Function ] ]
+      RetentionInDays: "7"
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main
+      Runtime: go1.x
+      CodeUri: tmp/.
+      Description: Send an email when files appear in S3
+      Timeout: 60
+      MemorySize: 256
+      Environment:
+        Variables:
+          APP_TEMPLATE: !Ref TemplateName
+          APP_MAILFROM: !Ref MailFrom
+          APP_MAILTO: !Ref MailTo
+      #Events:
+      #  S3Event:
+      #    Type: S3
+      #    Properties:
+      #      Bucket:
+      #        Ref: MonitoredBucket
+      #      Events: s3:ObjectCreated:Put
+      #      Filter:
+      #        S3Key:
+      #          Rules:
+      #          - Name: prefix      # or "suffix"
+      #            Value: processed/
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaReadOnlyAccess
+        - Statement:
+          - Sid: AllowSesIdentity
+            Effect: Allow
+            Resource:
+              - !Ref SesIdentityArn
+            Action:
+              - 'ses:SendTemplatedEmail'
