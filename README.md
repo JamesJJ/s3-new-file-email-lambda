@@ -18,9 +18,10 @@ You'll need:
 
  1. Execute `./aws-serverless/deploy.sh` 
  2. Enter parameter values when prompted:
-   - `SesIdentityArn` The ARN of the SES domain identity that corresponds to the `MailFrom` address you want to use ([performing the SES domain / from address validation](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html) is outside the scope of this project)
+   - `SesSendingIdentityArn` The ARN of the SES domain identity that corresponds to the `MailFrom` address you want to use ([performing the SES domain / from address validation](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html) is outside the scope of this project)
    - `MailFrom` The email address to send email from
    - `MailTo` The email address of the notification recepient (Must be 'verified' in SES if you are in the [AWS Sandbox](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/request-production-access.html)) 
+   - `SesDestinationIdentityArn` The ARN of the SES domain identity that corresponds to the `MailTo` address. *Only required if you are in the SES Sandbox and `MailTo` is not covered by `SesSendingIdentityArn`*.
    - `S3Bucket` The name of the S3 bucket that will invoke this lambda function
  3. When the stack has finished deploying, it will show the `LambdaARN` in the outputs. Please [set the S3 bucket to send](https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-event-notifications.html) `s3:ObjectCreated:Put` events to this Lambda ARN.
 

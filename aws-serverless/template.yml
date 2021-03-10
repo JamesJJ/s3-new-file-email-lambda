@@ -4,12 +4,17 @@ Description: An AWS Lambda application that sends an email when files appear in 
 Parameters:
   S3Bucket:
     Type: String
-  SesIdentityArn:
+  SesSendingIdentityArn:
     Type: String
+  SesDestinationIdentityArn:
+    Type: String
+    Default: ""
   MailFrom:
     Type: String
   MailTo:
     Type: String
+Conditions:
+  NoSesDestinationIdentityArn: !Equals [ !Ref SesDestinationIdentityArn, "" ]
 Resources:
   Template:
     Type: 'AWS::SES::Template'
@@ -48,6 +53,7 @@ Resources:
       MemorySize: 256
       Environment:
         Variables:
+          APP_SESSOURCEARN: !Ref SesSendingIdentityArn
           APP_TEMPLATE: !Join [ "-", [ !Ref AWS::StackName , "sestemplate" ] ]
           APP_MAILFROM: !Ref MailFrom
           APP_MAILTO: !Ref MailTo
@@ -66,7 +72,8 @@ Resources:
           - Sid: AllowSesSend
             Effect: Allow
             Resource:
-              - !Ref SesIdentityArn
+              - !Ref SesSendingIdentityArn
+              - !If [ NoSesDestinationIdentityArn, Ref: AWS::NoValue, Ref: SesDestinationIdentityArn ]
             Action:
               - 'ses:SendTemplatedEmail'
   LambdaInvokePermission:

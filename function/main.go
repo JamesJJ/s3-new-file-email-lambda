@@ -15,8 +15,9 @@ import (
 )
 
 type AppConfig struct {
-	S3Region     string        `default:"us-west-2"`
-	SesRegion    string        `default:"us-west-2"`
+	S3Region     string `default:"us-west-2"`
+	SesRegion    string `default:"us-west-2"`
+	SesSourceArn string
 	MailTo       string        `required:"true"`
 	MailFrom     string        `required:"true"`
 	Template     string        `required:"true"`
@@ -66,7 +67,7 @@ func sendEmail(sesSvc *ses.SES, s3Svc *s3.S3, event events.S3Event) (*ses.SendTe
 			fileList.Files = append(fileList.Files, File{FileName: s3.Object.Key, Url: url})
 			bucketMap[s3.Bucket.Name] = true
 		} else {
-	log.Printf("ERROR: %+v", err)
+			log.Printf("ERROR: %+v", err)
 		}
 	}
 
@@ -83,9 +84,15 @@ func sendEmail(sesSvc *ses.SES, s3Svc *s3.S3, event events.S3Event) (*ses.SendTe
 
 	toAddressList := []*string{&appConfig.MailTo}
 
+	var sesSourceArn *string
+	if appConfig.SesSourceArn != "" {
+		sesSourceArn = &appConfig.SesSourceArn
+	}
+
 	input := ses.SendTemplatedEmailInput{
 		Destination:  &ses.Destination{ToAddresses: toAddressList},
 		Source:       &appConfig.MailFrom,
+		SourceArn:    sesSourceArn,
 		Template:     &appConfig.Template,
 		TemplateData: &templateJsonString,
 	}
