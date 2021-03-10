@@ -2,11 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: An AWS Lambda application that sends an email when files appear in S3
 Parameters:
+  S3Bucket:
+    Type: String
   SesIdentityArn:
     Type: String
-  TemplateName:
-    Type: String
-    Default: S3_New_File_Lambda_Template
   MailFrom:
     Type: String
   MailTo:
@@ -16,7 +15,7 @@ Resources:
     Type: 'AWS::SES::Template'
     Properties:
       Template:
-        TemplateName: !Ref TemplateName
+        TemplateName: !Join [ "-", [ !Ref AWS::StackName , "sestemplate" ] ]
         SubjectPart: "{{Subject}}"
         TextPart: |+
           New files:
@@ -36,40 +35,49 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties: 
       LogGroupName: !Join [ "", [ "/aws/lambda/", !Ref Function ] ]
-      RetentionInDays: "7"
+      RetentionInDays: "14"
   Function:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Join [ "-", [ !Ref AWS::StackName , "lambda" ] ]
       Handler: main
       Runtime: go1.x
-      CodeUri: tmp/.
+      CodeUri: .
       Description: Send an email when files appear in S3
       Timeout: 60
       MemorySize: 256
       Environment:
         Variables:
-          APP_TEMPLATE: !Ref TemplateName
+          APP_TEMPLATE: !Join [ "-", [ !Ref AWS::StackName , "sestemplate" ] ]
           APP_MAILFROM: !Ref MailFrom
           APP_MAILTO: !Ref MailTo
-      #Events:
-      #  S3Event:
-      #    Type: S3
-      #    Properties:
-      #      Bucket:
-      #        Ref: MonitoredBucket
-      #      Events: s3:ObjectCreated:Put
-      #      Filter:
-      #        S3Key:
-      #          Rules:
-      #          - Name: prefix      # or "suffix"
-      #            Value: processed/
       Policies:
         - AWSLambdaBasicExecutionRole
-        - AWSLambdaReadOnlyAccess
         - Statement:
-          - Sid: AllowSesIdentity
+          - Sid: AllowS3
+            Effect: Allow
+            Resource:
+              - !Join [ "", [ "arn:aws:s3:::", !Ref S3Bucket ] ]
+              - !Join [ "", [ "arn:aws:s3:::", !Ref S3Bucket, "/*" ] ]
+            Action:
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+          - Sid: AllowSesSend
             Effect: Allow
             Resource:
               - !Ref SesIdentityArn
             Action:
               - 'ses:SendTemplatedEmail'
+  LambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt Function.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:s3:::${S3Bucket}'
+Outputs:
+  LambdaARN: 
+    Description: "ARN of Lambda Function"
+    Value: !GetAtt Function.Arn
