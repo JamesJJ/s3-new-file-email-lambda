@@ -24,3 +24,6 @@ You'll need:
    - `S3Bucket` The name of the S3 bucket that will invoke this lambda function
  3. When the stack has finished deploying, it will show the `LambdaARN` in the outputs. Please [set the S3 bucket to send](https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-event-notifications.html) `s3:ObjectCreated:Put` events to this Lambda ARN.
 
+## Notes
+
+ - Please consider carefully how much email could be generated if you bulk create files in S3. Use prefix and suffix filters when you configure S3 events triggering this function. Be aware that although SES has limits in-place to help ensure the sending reputation of both your domains and SES itself, you should avoid generating an unnecessary large volume of mail.
