@@ -71,7 +71,7 @@ func sendEmail(sesSvc *ses.SES, s3Svc *s3.S3, event events.S3Event) (*ses.SendTe
 		}
 	}
 
-	for bucket, _ := range bucketMap {
+	for bucket := range bucketMap {
 		fileList.Subject += " " + bucket
 	}
 
