@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/kelseyhightower/envconfig"
 	"log"
+	"net/url"
 	"time"
 )
 
@@ -66,8 +67,13 @@ func sendEmail(sesSvc *ses.SES, s3Svc *s3.S3, event events.S3Event) (*ses.SendTe
 
 	for _, record := range event.Records {
 		s3 := record.S3
-		if url, err := s3Presign(s3Svc, s3.Bucket.Name, s3.Object.Key); err == nil {
-			fileList.Files = append(fileList.Files, File{FileName: s3.Object.Key, Url: url})
+		unescapedKey, err := url.QueryUnescape(s3.Object.Key)
+		if err != nil {
+			log.Printf("ERROR: %+v", err)
+			continue
+		}
+		if url, err := s3Presign(s3Svc, s3.Bucket.Name, unescapedKey); err == nil {
+			fileList.Files = append(fileList.Files, File{FileName: unescapedKey, Url: url})
 			bucketMap[s3.Bucket.Name] = true
 		} else {
 			log.Printf("ERROR: %+v", err)
