@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	runtime "github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -15,13 +16,15 @@ import (
 )
 
 type AppConfig struct {
-	S3Region     string `default:"us-west-2"`
-	SesRegion    string `default:"us-west-2"`
-	SesSourceArn string
-	MailTo       string        `required:"true"`
-	MailFrom     string        `required:"true"`
-	Template     string        `required:"true"`
-	S3PresignTTL time.Duration `default:"160h"`
+	S3Region           string `default:"us-west-2"`
+	SesRegion          string `default:"us-west-2"`
+	SesSourceArn       string
+	MailTo             string        `required:"true"`
+	MailFrom           string        `required:"true"`
+	Template           string        `required:"true"`
+	S3PresignTTL       time.Duration `default:"160h"`
+	S3PresignAwsKeyId  string
+	S3PresignAwsSecret string
 }
 
 type TemplateData struct {
@@ -107,11 +110,22 @@ func handleRequest(ctx context.Context, event events.S3Event) error {
 
 	awsSession := session.Must(session.NewSession())
 	sesSvc := ses.New(awsSession, aws.NewConfig().WithRegion(appConfig.SesRegion))
-	s3Svc := s3.New(awsSession, aws.NewConfig().WithRegion(appConfig.S3Region))
+	s3Svc := s3.New(
+		awsSession,
+		aws.NewConfig().
+			WithRegion(appConfig.S3Region).
+			WithCredentials(
+				credentials.NewStaticCredentials(
+					appConfig.S3PresignAwsKeyId,
+					appConfig.S3PresignAwsSecret,
+					"",
+				),
+			),
+	)
 
 	emailOutput, err := sendEmail(sesSvc, s3Svc, event)
 	if err == nil {
-		log.Printf("EMAIL: %+v", emailOutput)
+		log.Printf("EMAIL: %v", emailOutput)
 	}
 	return err
 }

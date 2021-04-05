@@ -37,6 +37,28 @@ Resources:
           </ul>
           </body>
           </html>
+  IAMUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join ['-', [!Ref AWS::StackName, !Ref AWS::Region, iam-user]]
+      Policies:
+        - PolicyName: !Join ['-', [!Ref AWS::StackName, policy]]
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowS3
+                Effect: Allow
+                Resource:
+                  - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket]]
+                  - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, /*]]
+                Action:
+                  - s3:GetObject
+                  # - s3:GetBucketLocation
+                  # - s3:ListBucket
+  IAMKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref IAMUser
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -51,9 +73,11 @@ Resources:
       CodeUri: .
       Description: Send an email when files appear in S3
       Timeout: 60
-      MemorySize: 256
+      MemorySize: 128
       Environment:
         Variables:
+          APP_S3PRESIGNAWSKEYID: !Ref IAMKey
+          APP_S3PRESIGNAWSSECRET: !GetAtt IAMKey.SecretAccessKey
           APP_SESSOURCEARN: !Ref SesSendingIdentityArn
           APP_TEMPLATE: !Join ['-', [!Ref AWS::StackName, sestemplate]]
           APP_MAILFROM: !Ref MailFrom
@@ -61,15 +85,6 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - Statement:
-            - Sid: AllowS3
-              Effect: Allow
-              Resource:
-                - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket]]
-                - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, /*]]
-              Action:
-                - s3:GetBucketLocation
-                - s3:GetObject
-                - s3:ListBucket
             - Sid: AllowSesSend
               Effect: Allow
               Resource:
