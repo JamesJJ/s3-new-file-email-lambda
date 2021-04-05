@@ -5,4 +5,4 @@ version = 0.1
 stack_name = "s3-new-file-email"
 s3_prefix = "s3-new-file-email"
 region = "us-west-2"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_NAMED_IAM"

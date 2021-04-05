@@ -16,7 +16,7 @@ You'll need:
 
 ### Usage
 
- 1. Execute `./aws-serverless/deploy.sh` 
+ 1. Execute `./aws-serverless/deploy.sh -g` 
  2. Enter parameter values when prompted:
    - `SesSendingIdentityArn` The ARN of the SES domain identity that corresponds to the `MailFrom` address you want to use ([performing the SES domain / from address validation](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html) is outside the scope of this project)
    - `MailFrom` The email address to send email from
@@ -28,3 +28,4 @@ You'll need:
 ## Notes
 
  - Please consider carefully how much email could be generated if you bulk create files in S3. Use prefix and suffix filters when you configure S3 events triggering this function. Be aware that although SES has limits in-place to help ensure the sending reputation of both your domains and SES itself, you should avoid generating an unnecessary large volume of mail.
+ - The deployment template creates a new IAM user to use for pre-signing S3 URLs. This is necesary to ensure pre-signed URLs are valid for the required duration (it's possible to pre-sign with the lambda function's temporary session credentials, however this would cause pre-signed URLs to expire as soon as the session credentials expire)
