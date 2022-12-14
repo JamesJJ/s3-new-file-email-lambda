@@ -16,7 +16,7 @@ You'll need:
 
 ### Usage
 
- 1. Execute `./aws-serverless/deploy.sh -g` 
+ 1. Execute `./aws-serverless/deploy.sh -g`
  2. Enter parameter values when prompted:
    - `SesSendingIdentityArn` The ARN of the SES domain identity that corresponds to the `MailFrom` address you want to use ([performing the SES domain / from address validation](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-addresses-and-domains.html) is outside the scope of this project)
    - `MailFrom` The email address to send email from

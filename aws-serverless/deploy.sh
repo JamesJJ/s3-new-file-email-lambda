@@ -18,7 +18,7 @@ GOOS=linux GOARCH=amd64 go build -o main
 cd -
 
 mv "${FUNC_DIR_RELATIVE}/main" ./
-sam deploy --tags "tenant=fcg" $@
+sam deploy --tags "project=s3_new_file_email_lambda" $@
 rm -f ./main
 
 
