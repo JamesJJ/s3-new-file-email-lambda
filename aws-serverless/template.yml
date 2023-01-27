@@ -79,7 +79,7 @@ Resources:
           APP_S3PRESIGNAWSKEYID: !Ref IAMKey
           APP_S3PRESIGNAWSSECRET: !GetAtt IAMKey.SecretAccessKey
           APP_SESSOURCEARN: !Ref SesSendingIdentityArn
-          APP_TEMPLATE: !Join ['-', [!Ref AWS::StackName, sestemplate]]
+          APP_TEMPLATE: !Ref Template
           APP_MAILFROM: !Ref MailFrom
           APP_MAILTO: !Ref MailTo
       Policies:
@@ -90,6 +90,7 @@ Resources:
               Resource:
                 - !Ref SesSendingIdentityArn
                 - !If [NoSesDestinationIdentityArn, Ref: AWS::NoValue, Ref: SesDestinationIdentityArn]
+                - !Join ['', ['arn:aws:ses:', !Ref AWS::Region, ':', !Ref 'AWS::AccountId', ':template/', !Ref Template]]
               Action:
                 - ses:SendTemplatedEmail
   LambdaInvokePermission:
