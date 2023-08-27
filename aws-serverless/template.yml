@@ -66,10 +66,14 @@ Resources:
       RetentionInDays: '14'
   Function:
     Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
     Properties:
       FunctionName: !Join ['-', [!Ref AWS::StackName, lambda]]
-      Handler: main
-      Runtime: go1.x
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - arm64
       CodeUri: .
       Description: Send an email when files appear in S3
       Timeout: 60
