@@ -14,12 +14,14 @@ if [ ! -f "${SANITY}" ] ; then
 fi
 
 cd "${FUNC_DIR_RELATIVE}"
-GOOS=linux GOARCH=arm64 go build -o bootstrap
+GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o bootstrap
+zip bootstrap.zip bootstrap
+rm -f ./bootstrap
 cd -
 
-mv "${FUNC_DIR_RELATIVE}/bootstrap" ./
+mv "${FUNC_DIR_RELATIVE}/bootstrap.zip" ./
 sam deploy --tags "project=s3_new_file_email_lambda" $@
-rm -f ./bootstrap
+rm -f ./bootstrap.zip
 
 
 
