@@ -4,6 +4,7 @@ set -eou pipefail
 
 SAM_DIR="$(dirname "$0")"
 FUNC_DIR_RELATIVE="../function"
+APP="bootstrap"
 
 cd "${SAM_DIR}"
 
@@ -14,12 +15,14 @@ if [ ! -f "${SANITY}" ] ; then
 fi
 
 cd "${FUNC_DIR_RELATIVE}"
-GOOS=linux GOARCH=arm64 go build -o bootstrap
+GOOS=linux GOARCH=arm64 go build -tags lambda.norpc -o "${APP}"
+zip "${APP}.zip" "${APP}"
+rm -f "${APP}"
 cd -
 
-mv "${FUNC_DIR_RELATIVE}/bootstrap" ./
+mv "${FUNC_DIR_RELATIVE}/${APP}.zip" ./
 sam deploy --tags "project=s3_new_file_email_lambda" $@
-rm -f ./bootstrap
+rm -f "${APP}.zip"
 
 
 
