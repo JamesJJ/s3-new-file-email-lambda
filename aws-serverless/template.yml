@@ -68,9 +68,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Join ['-', [!Ref AWS::StackName, lambda]]
-      Handler: main
-      Runtime: go1.x
-      CodeUri: .
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      CodeUri: ./bootstrap.zip
       Description: Send an email when files appear in S3
       Timeout: 60
       MemorySize: 128
