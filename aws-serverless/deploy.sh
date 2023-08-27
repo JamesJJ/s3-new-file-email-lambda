@@ -14,7 +14,7 @@ if [ ! -f "${SANITY}" ] ; then
 fi
 
 cd "${FUNC_DIR_RELATIVE}"
-GOOS=linux GOARCH=amd64 go build -o bootstrap
+GOOS=linux GOARCH=arm64 go build -o bootstrap
 cd -
 
 mv "${FUNC_DIR_RELATIVE}/bootstrap" ./
